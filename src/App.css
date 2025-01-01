@@ -1,38 +1,23 @@
-.App {
-  text-align: center;
+/* Custom Modal Styles */
+.custom-modal .ant-modal {
+  border-radius: 10px;
+  padding: 20px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.custom-modal .ant-modal-header {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.custom-modal .ant-modal-title {
+  font-size: 18px;
+  font-weight: bold;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.custom-modal .ant-modal-footer {
+  display: none;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.custom-modal .ant-modal-content {
+  padding: 16px;
 }
