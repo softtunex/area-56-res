@@ -1,14 +1,11 @@
 import React from "react";
 import { Table, Switch } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 
-// Define the Product type
 interface Product {
   id: number;
   name: string;
   image: string;
-  quantity: number;
-  selected: boolean;
   price: string;
   availability: boolean;
 }
@@ -18,37 +15,41 @@ interface InventoryTableProps {
 }
 
 const InventoryTable: React.FC<InventoryTableProps> = ({ products }) => {
-  const columns = [
+  const columns: ColumnsType<Product> = [
     {
       title: "Product Name",
       dataIndex: "name",
       key: "name",
-      render: (text: string, record: Product) => (
-        <div className="flex items-center space-x-2">
-          <img src={record.image} alt={text} className="w-10 h-10 rounded-md" />
+      render: (text, record) => (
+        <div className="flex items-center space-x-4">
+          <img
+            src={record.image}
+            alt={record.name}
+            className="w-12 h-12 rounded-md"
+          />
           <span>{text}</span>
         </div>
       ),
     },
     {
       title: "Sales Metrics",
-      dataIndex: "salesMetrics",
+      dataIndex: "id",
       key: "salesMetrics",
       render: () => (
-        <div className="flex items-center space-x-1">
-          <span>Low</span>
-          <span className="text-gray-500">25</span>
+        <div>
+          <div className="text-gray-500">Low</div>
+          <div>25</div>
         </div>
       ),
     },
     {
       title: "Stock",
-      dataIndex: "stock",
+      dataIndex: "id",
       key: "stock",
       render: () => (
-        <div className="flex items-center space-x-1">
-          <span>High</span>
-          <span className="text-gray-500">70</span>
+        <div>
+          <div className="text-gray-500">High</div>
+          <div>70</div>
         </div>
       ),
     },
@@ -56,31 +57,30 @@ const InventoryTable: React.FC<InventoryTableProps> = ({ products }) => {
       title: "Price",
       dataIndex: "price",
       key: "price",
-      render: (text: string) => <span>{text}</span>,
     },
     {
       title: "Availability",
       dataIndex: "availability",
       key: "availability",
-      render: (available: boolean) => <Switch defaultChecked={available} />,
+      render: (availability) => <Switch defaultChecked={availability} />,
     },
     {
       title: "Action",
       key: "action",
       render: () => (
-        <a className="text-blue-500 hover:underline flex items-center space-x-1">
-          <EditOutlined />
-          <span>Modify</span>
-        </a>
+        <span className="text-blue-500 hover:underline cursor-pointer">
+          Modify
+        </span>
       ),
     },
   ];
 
   return (
     <Table
-      dataSource={products.map((product) => ({ ...product, key: product.id }))}
+      dataSource={products}
       columns={columns}
-      pagination={{ pageSize: 8 }}
+      rowKey="id"
+      pagination={false}
       bordered
     />
   );

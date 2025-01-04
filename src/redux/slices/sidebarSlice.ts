@@ -6,6 +6,7 @@ import {
   LockOutlined,
   AppstoreOutlined,
   CalendarOutlined,
+  CheckCircleOutlined, // Add new icon for Stock Availability
 } from "@ant-design/icons";
 
 export interface SidebarState {
@@ -39,6 +40,11 @@ const initialState: SidebarState = {
       label: "Staff Schedule",
       icon: CalendarOutlined,
       path: "/staff-schedule",
+    },
+    {
+      label: "Stock Availability", // New menu item for waiter
+      icon: CheckCircleOutlined,
+      path: "/stock-availability",
     },
   ],
 };

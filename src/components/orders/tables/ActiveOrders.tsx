@@ -14,7 +14,7 @@ const ActiveOrders: React.FC = () => {
       dataIndex: "tableNo",
       key: "tableNo",
       render: (tableNo: string) => (
-        <Button className="bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+        <Button className="bg-red-500 text-white px-2 py-1 rounded-lg text-xs">
           {tableNo}
         </Button>
       ),

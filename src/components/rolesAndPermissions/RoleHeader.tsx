@@ -8,7 +8,7 @@ interface RoleHeaderProps {
 const RoleHeader: React.FC<RoleHeaderProps> = ({ roleName, color }) => {
   return (
     <>
-      <div className={`flex items-center space-x-2 p-4 bg-${color}-100`}>
+      <div className={`flex items-center space-x-2 p-4 bg-gray-100`}>
         <span className={`w-2 h-2 rounded-full bg-${color}-500`} />
         <h2 className="font-semibold">{roleName}</h2>
       </div>
