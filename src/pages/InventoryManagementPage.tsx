@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import InventoryHeader from "../components/inventoryManagement/InventoryHeader";
 import EmptyState from "../components/inventoryManagement/EmptyState";
 import AddProductsModal from "../components/inventoryManagement/AddProductsModal";
+import InventoryTable from "../components/inventoryManagement/InventoryTable";
 import { productData } from "../data/productData";
-// Define at the top or in a separate `types.ts` file
+import { inventoryTableData } from "../data/inventoryTableData";
+
 interface Product {
   id: number;
   name: string;
@@ -13,26 +15,31 @@ interface Product {
 }
 
 const InventoryManagementPage: React.FC = () => {
-  const [isEmpty, setIsEmpty] = useState(true);
+  const [isEmpty, setIsEmpty] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [activeProducts, setActiveProducts] = useState<Product[]>([]);
+  const [activeProducts, setActiveProducts] = useState(inventoryTableData);
 
   const handleUpdateList = () => {
     setModalVisible(true);
   };
 
   const handleAddProducts = (products: Product[]) => {
-    setActiveProducts(products);
+    const updatedProducts = products.map((product) => ({
+      ...product,
+      price: "₦60,000",
+      availability: true,
+    }));
+    setActiveProducts([...activeProducts, ...updatedProducts]);
     setIsEmpty(false);
   };
 
   return (
     <div className="p-6 bg-white min-h-screen">
       <InventoryHeader onAllProductsClick={() => setModalVisible(true)} />
-      {isEmpty ? (
+      {!isEmpty ? (
         <EmptyState onUpdateListClick={handleUpdateList} />
       ) : (
-        <p>Active Products: {JSON.stringify(activeProducts, null, 2)}</p>
+        <InventoryTable products={activeProducts} />
       )}
       <AddProductsModal
         visible={isModalVisible}

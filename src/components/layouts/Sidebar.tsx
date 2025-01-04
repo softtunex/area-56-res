@@ -2,15 +2,30 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { selectSidebarItems } from "../../redux/slices/sidebarSlice";
-import { LogoutOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { LogoutOutlined, QuestionCircleOutlined } from "@ant-design/icons"; // Assume UserContext is defined for authentication.
+import { UserContext } from "../../context/UserContext";
 
 const Sidebar: React.FC = () => {
   const menuItems = useSelector(selectSidebarItems);
+  const { user } = React.useContext(UserContext); // Get user info from context.
+
+  // Filter menu items based on the user's role
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (user.role === "waiter") {
+      return (
+        item.label === "Dashboard" ||
+        item.label === "Orders" ||
+        item.label === "Staff Schedule" ||
+        item.label === "Stock Availability"
+      );
+    }
+    return true; // Return all items for other roles.
+  });
 
   return (
     <div className="h-screen w-64 bg-white shadow-md flex flex-col">
       <ul className="mt-4 flex-1">
-        {menuItems.map((item, index) => (
+        {filteredMenuItems.map((item, index) => (
           <li key={index} className="mb-2">
             <NavLink
               to={item.path}

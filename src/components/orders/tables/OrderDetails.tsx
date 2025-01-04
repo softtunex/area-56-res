@@ -1,5 +1,5 @@
 import React from "react";
-import { Table } from "antd";
+import { Button, Table } from "antd";
 import { orderData } from "../../../data/orderData";
 
 interface OrderDetailsProps {
@@ -18,9 +18,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderType }) => {
       dataIndex: "tableNo",
       key: "tableNo",
       render: (tableNo: string) => (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+        <Button className="bg-red-500 text-white px-2 py-1 rounded-lg text-xs">
           {tableNo}
-        </span>
+        </Button>
       ),
     },
     {
