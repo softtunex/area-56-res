@@ -5,11 +5,12 @@ import {
   DownOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
   const branches = ["Lagos branch", "Abuja branch", "Port Harcourt branch"];
 
-  // Dropdown menu for branches
   const branchMenu = (
     <div className="bg-white shadow-md rounded-lg border">
       {branches.map((branch, index) => (
@@ -26,16 +27,13 @@ const Navbar: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white shadow-sm">
-      {/* Left Section: Title */}
       <div className="flex items-center">
         <div className="text-lg font-bold">
           Area 56 <span className="text-xs text-gray-500">Admin</span>
         </div>
       </div>
 
-      {/* Center Section: Branch Selector and Search Bar */}
       <div className="flex items-center space-x-6">
-        {/* Branch Selector */}
         <Dropdown overlay={branchMenu} trigger={["click"]}>
           <div className="flex items-center text-blue-500 cursor-pointer">
             <EnvironmentOutlined className="mr-1 text-lg" />
@@ -44,7 +42,6 @@ const Navbar: React.FC = () => {
           </div>
         </Dropdown>
 
-        {/* Search Bar */}
         <Input.Search
           placeholder="Search for Employee, Order ID"
           allowClear
@@ -53,18 +50,21 @@ const Navbar: React.FC = () => {
         />
       </div>
 
-      {/* Right Section: Notifications and User Profile */}
       <div className="flex items-center space-x-6">
         {/* Notifications */}
         <Badge count={3} offset={[10, 0]}>
-          <BellOutlined className="text-xl cursor-pointer" />
+          <BellOutlined
+            className="text-xl cursor-pointer"
+            onClick={() => navigate("/notifications")}
+          />
         </Badge>
 
-        {/* Divider */}
         <div className="h-6 w-px bg-gray-300"></div>
 
-        {/* User Profile */}
-        <div className="flex items-center space-x-3">
+        <div
+          className="flex items-center space-x-3 cursor-pointer"
+          onClick={() => navigate("/profile")}
+        >
           <Avatar
             src="https://i.pravatar.cc/150?img=12"
             size="large"
