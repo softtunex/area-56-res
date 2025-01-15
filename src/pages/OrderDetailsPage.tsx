@@ -1,93 +1,138 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import PaymentDetails from "../components/orders/details/PaymentDetails";
 import MessageSection from "../components/orders/details/MessageSection";
 import OrderDetailsTable from "../components/orders/details/OrderDetailsTable";
 import CustomerInfo from "../components/orders/details/CustomerInfo";
+import OrderCompletionModal from "../components/orders/details/OrderCompletionModal";
+import ActivityLog from "../components/orders/details/ActivityLog";
+import { orderDetailsData as defaultOrderDetailsData } from "../data/orderDetailsData";
+
+const initialActivityLog = [
+  {
+    time: "4:27 pm",
+    title: "Order Placed",
+    description: [
+      { time: "4:27 pm", text: "Customer successfully placed order" },
+    ],
+    color: "#E3F2FD", // Light Blue
+    icon: "📦",
+  },
+];
 
 const OrderDetailsPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
+  const [isOrderReady, setIsOrderReady] = useState(false);
+  const [isOrderClosed, setIsOrderClosed] = useState(false); // New state for order closure
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activityLog, setActivityLog] = useState(initialActivityLog);
 
-  // Mock Data (replace with API call)
-  const orderData = {
-    id: orderId,
-    date: "09-10-2024",
-    time: "01:34 PM",
-    status: "Incoming",
-    items: [
+  const orderDetailsData = {
+    ...defaultOrderDetailsData,
+    id: orderId || defaultOrderDetailsData.id,
+    status: isOrderClosed
+      ? "Closed"
+      : isOrderReady
+      ? "Ready"
+      : isOrderConfirmed
+      ? "Processing"
+      : "Incoming",
+    statusColor: isOrderClosed
+      ? "bg-green-100 text-green-500"
+      : isOrderReady
+      ? "bg-purple-100 text-purple-500"
+      : isOrderConfirmed
+      ? "bg-yellow-100 text-yellow-500"
+      : "bg-blue-100 text-blue-500",
+  };
+
+  const handleConfirmOrder = () => {
+    setIsOrderConfirmed(true);
+    setActivityLog((prev) => [
+      ...prev,
       {
-        id: 1,
-        name: "Red Wine",
-        quantity: 1,
-        vendor: "The BAR",
-        amount: "₦60,000",
+        time: "4:29 pm",
+        title: "Order Confirmed",
+        description: [
+          { time: "4:29 pm", text: "Order was confirmed to be available" },
+        ],
+        color: "#C8E6C9", // Light Green
+        icon: "✅",
+      },
+    ]);
+  };
+
+  const handleMoveToReady = () => {
+    setIsOrderReady(true);
+    setActivityLog((prev) => [
+      ...prev,
+      {
+        time: "4:30 pm",
+        title: "Preparation",
+        description: [
+          { time: "4:30 pm", text: "Order forwarded to process station" },
+          { time: "4:31 pm", text: "Order is being prepared" },
+        ],
+        color: "#FFF9C4", // Light Yellow
+        icon: "⚙️",
       },
       {
-        id: 2,
-        name: "Casamigos(Shots)",
-        quantity: 5,
-        vendor: "The BAR",
-        amount: "₦60,000",
+        time: "4:32 pm",
+        title: "Order Ready",
+        description: [
+          { time: "4:32 pm", text: "Order is confirmed to be ready" },
+          { time: "4:33 pm", text: "Order is picked up" },
+        ],
+        color: "#FFCDD2", // Light Red
+        icon: "🔔",
       },
+    ]);
+  };
+
+  const handleCompleteOrder = () => {
+    setIsModalOpen(false);
+    setIsOrderClosed(true); // Mark order as closed
+    setActivityLog((prev) => [
+      ...prev,
       {
-        id: 3,
-        name: "Jollof Rice",
-        quantity: 2,
-        vendor: "Kilimangaro",
-        amount: "₦60,000",
+        time: "4:33 pm",
+        title: "Order Closed",
+        description: [{ time: "4:33 pm", text: "Order is closed" }],
+        color: "#C5E1A5", // Light Green
+        icon: "✔️",
       },
-      {
-        id: 4,
-        name: "Large Jumbo Pizza",
-        quantity: 1,
-        vendor: "Pizza Jungle",
-        amount: "₦60,000",
-      },
-    ],
-    customer: {
-      name: "Emeka John",
-      email: "emekajohn@gmail.com",
-      phone: "08028173391",
-    },
-    payment: {
-      subtotal: "₦60,000",
-      method: "Online transfer",
-      pending: "₦0",
-      totalPaid: "₦60,000",
-    },
-    message:
-      "Please add salt to the rim of the glass of the shots. I would also call extra cheese on the pizza and less pepper.",
+    ]);
   };
 
   return (
     <div className="p-4 bg-white min-h-screen">
-      {/* Back Button and Order Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-2 sm:space-y-0">
         <div className="flex items-center space-x-2">
           <button className="text-gray-500 hover:text-black text-6xl">←</button>
-          <div className="text-left ">
+          <div className="text-left">
             <h1 className="text-lg sm:text-3xl font-bold">
-              ORDER #{orderData.id}
+              ORDER #{orderDetailsData.id}
             </h1>
             <p className="text-sm text-gray-500">
-              {orderData.date} {orderData.time}
+              {orderDetailsData.date} {orderDetailsData.time}
             </p>
           </div>
         </div>
         <div className="text-left flex items-center space-x-2">
           <h6>Order Status</h6>
-          <span className="bg-blue-100 text-blue-500 px-3 py-1 rounded-full text-sm">
-            {orderData.status}
+          <span
+            className={`px-3 py-1 rounded-full text-sm ${orderDetailsData.statusColor}`}
+          >
+            {orderDetailsData.status}
           </span>
         </div>
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Section: Order Details and Message */}
         <div className="lg:col-span-2 space-y-6">
           <OrderDetailsTable
-            data={orderData.items.map((item, index) => ({
+            data={orderDetailsData.items.map((item, index) => ({
               key: index + 1,
               item: item.name,
               quantity: `x${item.quantity}`,
@@ -95,24 +140,62 @@ const OrderDetailsPage: React.FC = () => {
               total: item.amount,
             }))}
           />
-          <MessageSection message={orderData.message} />
+          <MessageSection message={orderDetailsData.message} />
+          <ActivityLog activities={activityLog} />
           <div className="text-center sm:text-left">
-            <button className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center justify-center sm:justify-start">
-              Confirm Order
-              <span className="ml-2">→</span>
-            </button>
+            {!isOrderClosed && ( // Do not display buttons if the order is closed
+              <>
+                {!isOrderConfirmed ? (
+                  <button
+                    className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center justify-center sm:justify-start"
+                    onClick={handleConfirmOrder}
+                  >
+                    Confirm Order
+                    <span className="ml-2">→</span>
+                  </button>
+                ) : !isOrderReady ? (
+                  <div className="flex justify-between">
+                    <button className="border border-black text-black px-6 py-2 rounded-lg flex items-center">
+                      ← Back
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center"
+                      onClick={handleMoveToReady}
+                    >
+                      Move to Ready →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex justify-between">
+                    <button className="border border-black text-black px-6 py-2 rounded-lg flex items-center">
+                      ← Back
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center"
+                      onClick={() => setIsModalOpen(true)}
+                    >
+                      Close Order →
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
-
-        {/* Right Section: Customer Info and Payment Details */}
         <div className="space-y-4">
-          <CustomerInfo customer={orderData.customer} />
-          <PaymentDetails payment={orderData.payment} />
+          <CustomerInfo customer={orderDetailsData.customer} />
+          <PaymentDetails payment={orderDetailsData.payment} />
           <button className="bg-green-500 text-white w-full py-2 mt-4 rounded-lg">
             Payment Confirmed
           </button>
         </div>
       </div>
+
+      <OrderCompletionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleCompleteOrder}
+      />
     </div>
   );
 };
