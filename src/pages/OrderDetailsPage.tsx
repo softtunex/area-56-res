@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PaymentDetails from "../components/orders/details/PaymentDetails";
 import MessageSection from "../components/orders/details/MessageSection";
 import OrderDetailsTable from "../components/orders/details/OrderDetailsTable";
@@ -7,6 +7,9 @@ import CustomerInfo from "../components/orders/details/CustomerInfo";
 import OrderCompletionModal from "../components/orders/details/OrderCompletionModal";
 import ActivityLog from "../components/orders/details/ActivityLog";
 import { orderDetailsData as defaultOrderDetailsData } from "../data/orderDetailsData";
+import { useOrderDetails } from "../hooks/useOrders";
+import { usePayment } from "../hooks/usePayments";
+import { Spin } from "antd";
 
 const initialActivityLog = [
   {
@@ -22,11 +25,34 @@ const initialActivityLog = [
 
 const OrderDetailsPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const { data: order, isLoading: orderLoading } = useOrderDetails(
+    Number(orderId)
+  );
+  const { data: payment, isLoading: paymentLoading } = usePayment(
+    Number(orderId)
+  );
+  const navigate = useNavigate();
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
   const [isOrderReady, setIsOrderReady] = useState(false);
   const [isOrderClosed, setIsOrderClosed] = useState(false); // New state for order closure
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activityLog, setActivityLog] = useState(initialActivityLog);
+
+  if (orderLoading || paymentLoading) {
+    return (
+      <div className="flex justify-center py-10">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="flex justify-center py-10">
+        <p className="text-gray-500">Order not found</p>
+      </div>
+    );
+  }
 
   const orderDetailsData = {
     ...defaultOrderDetailsData,
@@ -109,13 +135,18 @@ const OrderDetailsPage: React.FC = () => {
     <div className="p-4 bg-white min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-2 sm:space-y-0">
         <div className="flex items-center space-x-2">
-          <button className="text-gray-500 hover:text-black text-6xl">←</button>
+          <button
+            onClick={() => navigate(-1)}
+            className="text-gray-500 hover:text-black text-6xl"
+          >
+            ←
+          </button>
           <div className="text-left">
             <h1 className="text-lg sm:text-3xl font-bold">
-              ORDER #{orderDetailsData.id}
+              ORDER #{order.reference}
             </h1>
             <p className="text-sm text-gray-500">
-              {orderDetailsData.date} {orderDetailsData.time}
+              {new Date(order.created_at).toLocaleString()}
             </p>
           </div>
         </div>
@@ -124,22 +155,14 @@ const OrderDetailsPage: React.FC = () => {
           <span
             className={`px-3 py-1 rounded-full text-sm ${orderDetailsData.statusColor}`}
           >
-            {orderDetailsData.status}
+            {order.order_status.name}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <OrderDetailsTable
-            data={orderDetailsData.items.map((item, index) => ({
-              key: index + 1,
-              item: item.name,
-              quantity: `x${item.quantity}`,
-              vendor: item.vendor,
-              total: item.amount,
-            }))}
-          />
+          <OrderDetailsTable orderItems={order.order_items} />
           <MessageSection message={orderDetailsData.message} />
           <ActivityLog activities={activityLog} />
           <div className="text-center sm:text-left">
@@ -147,7 +170,7 @@ const OrderDetailsPage: React.FC = () => {
               <>
                 {!isOrderConfirmed ? (
                   <button
-                    className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center justify-center sm:justify-start"
+                    className="bg-primary text-white px-6 py-2 rounded-lg flex items-center justify-center sm:justify-start"
                     onClick={handleConfirmOrder}
                   >
                     Confirm Order
@@ -159,7 +182,7 @@ const OrderDetailsPage: React.FC = () => {
                       ← Back
                     </button>
                     <button
-                      className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center"
+                      className="bg-primary text-white px-6 py-2 rounded-lg flex items-center"
                       onClick={handleMoveToReady}
                     >
                       Move to Ready →
@@ -171,7 +194,7 @@ const OrderDetailsPage: React.FC = () => {
                       ← Back
                     </button>
                     <button
-                      className="bg-red-500 text-white px-6 py-2 rounded-lg flex items-center"
+                      className="bg-primary text-white px-6 py-2 rounded-lg flex items-center"
                       onClick={() => setIsModalOpen(true)}
                     >
                       Close Order →
@@ -183,8 +206,8 @@ const OrderDetailsPage: React.FC = () => {
           </div>
         </div>
         <div className="space-y-4">
-          <CustomerInfo customer={orderDetailsData.customer} />
-          <PaymentDetails payment={orderDetailsData.payment} />
+          <CustomerInfo customer={order.user} />
+          <PaymentDetails payment={payment} />
           <button className="bg-green-500 text-white w-full py-2 mt-4 rounded-lg">
             Payment Confirmed
           </button>

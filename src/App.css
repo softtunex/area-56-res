@@ -21,3 +21,9 @@
 .custom-modal .ant-modal-content {
   padding: 16px;
 }
+/* ✅ Custom Table Header Styling */
+.custom-table .ant-table-thead > tr > th {
+  background-color: #212a4f !important;
+  color: white !important;
+  text-align: center;
+}

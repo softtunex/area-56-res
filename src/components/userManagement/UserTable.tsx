@@ -1,61 +1,118 @@
-import React from "react";
-import { Table, Tag } from "antd";
+import React, { useState } from "react";
+import { Table, Tag, Pagination, Avatar } from "antd";
 import { EditOutlined } from "@ant-design/icons";
-import { userData } from "../../data/userData";
+import type { ColumnsType } from "antd/es/table";
+import { useUsers, User } from "../../hooks/useUsers"; // ✅ Import `User` from `useUsers.ts`
 
 interface UserTableProps {
-  onModifyUser: (user: any) => void;
+  filters: Record<string, any>;
+  onModifyUser: (user: User) => void;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ onModifyUser }) => {
-  const columns = [
+const UserTable: React.FC<UserTableProps> = ({ filters, onModifyUser }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data: usersData, isLoading: usersLoading } = useUsers(
+    currentPage,
+    filters
+  );
+
+  // ✅ Explicitly define columns as `ColumnsType<User>`
+  const columns: ColumnsType<User> = [
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (name: string, record: any) => (
+      fixed: "left",
+      render: (name, record) => (
         <div className="flex items-center space-x-2">
-          <img
-            src={record.avatar || "/default-avatar.png"}
-            alt="avatar"
-            className="w-8 h-8 rounded-full"
-          />
+          <Avatar src={record.user_type?.icon || "/default-avatar.png"} />
           <span>{name}</span>
         </div>
       ),
     },
     {
-      title: "Email Address",
+      title: "Email",
       dataIndex: "email",
       key: "email",
+      ellipsis: true, // ✅ Prevents text wrapping
     },
     {
-      title: "Departments and Teams",
-      dataIndex: "team",
-      key: "team",
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      ellipsis: true,
     },
     {
-      title: "Activity Status",
+      title: "WhatsApp",
+      dataIndex: "whatsapp_phone",
+      key: "whatsapp_phone",
+      ellipsis: true,
+      render: (whatsapp) => whatsapp || "N/A",
+    },
+    {
+      title: "DOB",
+      dataIndex: "date_of_birth",
+      key: "date_of_birth",
+      ellipsis: true,
+      render: (dob) => dob || "N/A",
+    },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+      ellipsis: true,
+      render: (gender) => gender || "N/A",
+    },
+    {
+      title: "User Type",
+      dataIndex: "user_type",
+      key: "user_type",
+      ellipsis: true,
+      render: (user_type) => user_type?.name || "Unknown",
+    },
+    {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+      ellipsis: true,
+      render: (location) => location?.name || "Unknown",
+    },
+    {
+      title: "Address",
+      dataIndex: "address",
+      key: "address",
+      ellipsis: true,
+      render: (address) => address || "N/A",
+    },
+    {
+      title: "State",
+      dataIndex: "state",
+      key: "state",
+      ellipsis: true,
+      render: (state) => state || "N/A",
+    },
+    {
+      title: "Country",
+      dataIndex: "country",
+      key: "country",
+      ellipsis: true,
+      render: (country) => country || "N/A",
+    },
+    {
+      title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => (
-        <Tag
-          color={status === "Online" ? "green" : "orange"}
-          className="w-16 px-2 py-1 rounded-full flex items-center space-x-1"
-        >
-          <span
-            className={`w-2 h-2 rounded-full ${
-              status === "Online" ? "bg-green-500" : "bg-orange-500"
-            }`}
-          ></span>
-          <span>{status}</span>
+      render: (status) => (
+        <Tag color={status === 1 ? "green" : "red"}>
+          {status === 1 ? "Active" : "Inactive"}
         </Tag>
       ),
     },
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: any) => (
+      fixed: "right",
+      render: (_, record) => (
         <button
           onClick={() => onModifyUser(record)}
           className="text-blue-500 hover:underline flex items-center space-x-1"
@@ -68,13 +125,27 @@ const UserTable: React.FC<UserTableProps> = ({ onModifyUser }) => {
   ];
 
   return (
-    <Table
-      dataSource={userData}
-      columns={columns}
-      pagination={{ pageSize: 10 }}
-      bordered
-      scroll={{ x: "100%" }}
-    />
+    <div>
+      <Table
+        dataSource={usersData?.data ?? []}
+        columns={columns}
+        pagination={false}
+        loading={usersLoading}
+        bordered
+        scroll={{ x: "max-content" }}
+        className="custom-table"
+      />
+
+      {/* ✅ Custom Pagination */}
+      <div className="flex justify-end mt-4">
+        <Pagination
+          current={usersData?.meta.current_page ?? 1}
+          total={usersData?.meta.total ?? 0}
+          onChange={(page) => setCurrentPage(page)}
+          showSizeChanger={false}
+        />
+      </div>
+    </div>
   );
 };
 

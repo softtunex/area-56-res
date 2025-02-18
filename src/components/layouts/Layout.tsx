@@ -1,28 +1,34 @@
-import React from "react";
-import Navbar from "./Navbar"; // Existing Navbar component
-import Sidebar from "./Sidebar"; // Existing Sidebar component
+import React, { useState } from "react";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+import { Outlet } from "react-router-dom";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+const Layout: React.FC = () => {
+  // eslint-disable-next-line
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+  // ✅ Toggle Sidebar Visibility
+  const toggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
+
   return (
     <div className="h-screen flex flex-col">
-      {/* Fixed Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-10">
-        <Navbar />
+      {/* ✅ Pass toggleSidebar to Navbar */}
+      <header style={{ zIndex: 31 }} className="fixed top-0 left-0 right-0">
+        <Navbar toggleSidebar={toggleSidebar} />
       </header>
 
-      {/* Sidebar and Main Content */}
       <div className="flex flex-1 pt-16">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-lg">
+        {/* ✅ Sidebar with slide-in effect */}
+        <aside>
           <Sidebar />
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 bg-gray-100 p-6 overflow-auto">{children}</main>
+        {/* ✅ Main Content */}
+        <main className="flex-1 bg-white p-6 overflow-auto">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

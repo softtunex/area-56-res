@@ -59,7 +59,7 @@ const AddNewUserModal: React.FC<AddNewUserModalProps> = ({
       <div className="border-b border-gray-200 pb-4 mb-6"></div>
       <Form layout="vertical" form={form}>
         {/* Basic Info Section */}
-        <h3 className="font-semibold text-red-500 underline mb-4">
+        <h3 className="font-semibold text-primary underline mb-4">
           Basic Info
         </h3>
         <div className="grid grid-cols-2 gap-4">
@@ -89,7 +89,7 @@ const AddNewUserModal: React.FC<AddNewUserModalProps> = ({
           <Input placeholder="Enter email" />
         </Form.Item>
 
-        <h3 className="font-semibold text-red-500 underline mb-4">Team</h3>
+        <h3 className="font-semibold text-primary underline mb-4">Team</h3>
         <Form.Item
           name="team"
           label="Team"
@@ -103,7 +103,7 @@ const AddNewUserModal: React.FC<AddNewUserModalProps> = ({
 
         {/* Activity Status Section */}
         <div>
-          <h3 className="font-semibold text-red-500 underline mb-4">
+          <h3 className="font-semibold text-primary underline mb-4">
             Activity Status
           </h3>
           <Form.Item

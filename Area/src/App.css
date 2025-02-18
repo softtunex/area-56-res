@@ -1,0 +1,23 @@
+/* Custom Modal Styles */
+.custom-modal .ant-modal {
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.custom-modal .ant-modal-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.custom-modal .ant-modal-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.custom-modal .ant-modal-footer {
+  display: none;
+}
+
+.custom-modal .ant-modal-content {
+  padding: 16px;
+}

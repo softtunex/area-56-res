@@ -1,85 +1,65 @@
-import React from "react";
-import { Button, Table } from "antd";
-import { orderData } from "../../../data/orderData";
+import React, { useState } from "react";
+import { Table, Button, Spin, Pagination } from "antd";
+import { useOrders } from "../../../hooks/useOrders";
 
 const ActiveOrders: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data: ordersData, isLoading } = useOrders(currentPage, {
+    order_status_id: 1,
+  });
+
   const columns = [
     {
       title: "Order ID",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "reference",
+      key: "reference",
     },
     {
-      title: "Table No.",
-      dataIndex: "tableNo",
-      key: "tableNo",
-      render: (tableNo: string) => (
-        <Button className="bg-red-500 text-white px-2 py-1 rounded-lg text-xs">
-          {tableNo}
-        </Button>
+      title: "Customer",
+      dataIndex: "user",
+      key: "user",
+      render: (user: { name: string; user_type: { icon: string } }) => (
+        <div className="flex items-center space-x-2">
+          <img src={user.user_type.icon} alt="icon" className="w-5 h-5" />
+          <span>{user.name}</span>
+        </div>
       ),
     },
     {
-      title: "Time of Order",
-      dataIndex: "time",
-      key: "time",
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+      render: (location: { name: string }) => location.name,
     },
     {
-      title: "Order Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            status === "Incoming"
-              ? "bg-blue-500 text-white"
-              : status === "Processing"
-              ? "bg-yellow-300 text-black"
-              : "bg-purple-500 text-white"
-          }`}
-        >
-          {status}
+      title: "Status",
+      dataIndex: "order_status",
+      key: "order_status",
+      render: (order_status: { name: string }) => (
+        <span className="px-2 py-1 rounded-full bg-blue-500 text-white text-xs">
+          {order_status.name}
         </span>
       ),
     },
     {
-      title: "Customer Name",
-      dataIndex: "customer",
-      key: "customer",
-    },
-    {
-      title: "Items",
-      dataIndex: "items",
-      key: "items",
-    },
-    {
-      title: "Items Number",
-      dataIndex: "itemCount",
-      key: "itemCount",
-    },
-    {
-      title: "Payment Status",
-      dataIndex: "paymentStatus",
-      key: "paymentStatus",
-      render: (paymentStatus: string) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            paymentStatus === "Paid" ? "text-green-500" : "text-red-500"
-          }`}
-        >
-          {paymentStatus}
-        </span>
-      ),
+      title: "Total Items",
+      dataIndex: "order_items",
+      key: "order_items",
+      render: (order_items: any[]) => order_items.length,
     },
     {
       title: "Total Amount",
-      dataIndex: "amount",
-      key: "amount",
+      dataIndex: "order_items",
+      key: "total_amount",
+      render: (order_items: any[]) =>
+        order_items
+          .reduce((total, item) => total + parseFloat(item.amount), 0)
+          .toFixed(2),
     },
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: { id: number }) => (
         <a
           href={`/orders/${record.id}`}
           className="text-blue-500 hover:underline"
@@ -92,38 +72,29 @@ const ActiveOrders: React.FC = () => {
 
   return (
     <div>
-      {/* Incoming Orders */}
-      <h2 className="text-lg font-bold mb-2">Incoming Orders (20)</h2>
-      <Table
-        columns={columns}
-        dataSource={orderData["Active Orders"].filter(
-          (o) => o.status === "Incoming"
-        )}
-        pagination={{ pageSize: 5 }}
-        scroll={{ x: "100%" }}
-      />
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <>
+          <Table
+            columns={columns}
+            dataSource={ordersData?.data ?? []}
+            pagination={false}
+            scroll={{ x: "100%" }}
+          />
 
-      {/* Preparing Orders */}
-      <h2 className="text-lg font-bold mb-2">Preparing Orders (20)</h2>
-      <Table
-        columns={columns}
-        dataSource={orderData["Active Orders"].filter(
-          (o) => o.status === "Preparing"
-        )}
-        pagination={{ pageSize: 5 }}
-        scroll={{ x: "100%" }}
-      />
-
-      {/* Ready Orders */}
-      <h2 className="text-lg font-bold mb-2">Ready Orders (20)</h2>
-      <Table
-        columns={columns}
-        dataSource={orderData["Active Orders"].filter(
-          (o) => o.status === "Ready"
-        )}
-        pagination={{ pageSize: 5 }}
-        scroll={{ x: "100%" }}
-      />
+          <div className="flex justify-end mt-4">
+            <Pagination
+              current={ordersData?.meta.current_page ?? 1}
+              total={ordersData?.meta.total ?? 0}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

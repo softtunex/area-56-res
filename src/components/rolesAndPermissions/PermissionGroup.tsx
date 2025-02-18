@@ -1,53 +1,79 @@
-import React, { useState } from "react";
-import { Collapse, Switch, Tooltip } from "antd";
+import React, { useState, useEffect } from "react";
+import { Collapse, Switch, Tooltip, Spin } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
-
-interface Permission {
-  name: string;
-  description: string;
-  enabled: boolean;
-}
+import {
+  usePermissions,
+  useToggleRolePermission,
+} from "../../hooks/usePermissions";
 
 interface PermissionGroupProps {
-  title: string;
-  description?: string; // Added for group-level descriptions
-  permissions: Permission[];
+  roleId: number;
 }
 
-const PermissionGroup: React.FC<PermissionGroupProps> = ({
-  title,
-  description,
-  permissions,
-}) => {
-  const [activeKey, setActiveKey] = useState<string | string[]>([]);
+const PermissionGroup: React.FC<PermissionGroupProps> = ({ roleId }) => {
+  const { data: permissions, isLoading, error } = usePermissions();
+  const { mutate: togglePermission, isPending } = useToggleRolePermission();
+  const [assignedPermissions, setAssignedPermissions] = useState<
+    Record<number, boolean>
+  >({});
+
+  useEffect(() => {
+    // Initialize permissions as unchecked
+    if (permissions) {
+      const initialPermissions: Record<number, boolean> = {};
+      permissions.forEach((permission) => {
+        initialPermissions[permission.id] = permission.status || false; // Use default status
+      });
+      setAssignedPermissions(initialPermissions);
+    }
+  }, [permissions]);
+
+  if (isLoading) return <Spin className="flex justify-center my-6" />;
+  if (error)
+    return (
+      <p className="text-primary text-center">Failed to load permissions</p>
+    );
+
+  // ✅ Handle Permission Toggle
+  const handleToggle = (permissionId: number) => {
+    const currentStatus = assignedPermissions[permissionId] || false;
+    const updatedStatus = !currentStatus;
+
+    setAssignedPermissions((prev) => ({
+      ...prev,
+      [permissionId]: updatedStatus,
+    }));
+
+    togglePermission({
+      role_id: roleId,
+      permission_id: permissionId,
+      status: updatedStatus,
+    });
+  };
 
   return (
-    <Collapse
-      activeKey={activeKey}
-      onChange={(key) => setActiveKey(key)}
-      bordered={false}
-    >
+    <Collapse bordered={false} defaultActiveKey={["1"]}>
       <Collapse.Panel
-        header={
-          <div>
-            <h3 className="font-semibold">{title}</h3>
-            {description && (
-              <p className="text-sm text-gray-500">{description}</p>
-            )}
-          </div>
-        }
+        header={<h3 className="font-semibold">Permissions</h3>}
         key="1"
       >
         <div className="grid grid-cols-2 gap-4">
-          {permissions.map((perm, idx) => (
-            <div key={idx} className="flex justify-between items-center ml-6">
+          {permissions?.map((permission) => (
+            <div
+              key={permission.id}
+              className="flex justify-between items-center ml-6"
+            >
               <div className="flex items-center space-x-2">
-                <span>{perm.name}</span>
-                <Tooltip title={perm.description}>
+                <span>{permission.name}</span>
+                <Tooltip title={permission.description}>
                   <InfoCircleOutlined className="text-gray-400" />
                 </Tooltip>
               </div>
-              <Switch defaultChecked={perm.enabled} />
+              <Switch
+                checked={assignedPermissions[permission.id] ?? false}
+                loading={isPending}
+                onChange={() => handleToggle(permission.id)}
+              />
             </div>
           ))}
         </div>

@@ -16,7 +16,7 @@ const EmptyState: React.FC<{ onUpdateListClick: () => void }> = ({
     <p className="text-lg font-medium mb-2">No Active Products</p>
     <button
       onClick={onUpdateListClick}
-      className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center"
+      className="bg-primary text-white px-4 py-2 rounded-lg flex items-center"
     >
       <span className="mr-2">+</span> Update List
     </button>

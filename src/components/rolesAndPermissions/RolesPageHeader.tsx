@@ -12,7 +12,7 @@ const RolesPageHeader: React.FC<RolesPageHeaderProps> = ({ onCreateRole }) => {
       <h1 className="text-xl font-bold">Roles and Permissions</h1>
       <Button
         onClick={onCreateRole}
-        className="bg-red-500 text-white"
+        className="bg-primary text-white"
         icon={<PlusOutlined />}
       >
         Create New Role
