@@ -53,6 +53,7 @@ export const useProducts = (page: number) => {
         data: Product[];
         meta: { total: number; current_page: number; last_page: number };
       }>(`/product?page=${page}`);
+
       return response.data;
     },
     staleTime: 1000 * 60 * 60, // ✅ Cache for 1 hour
@@ -86,7 +87,13 @@ export const useCreateProduct = () => {
     mutationFn: async (
       newProduct: Omit<
         Product,
-        "id" | "created_at" | "updated_at" | "deleted_at"
+        | "id"
+        | "created_at"
+        | "updated_at"
+        | "deleted_at"
+        | "location"
+        | "category"
+        | "vendor"
       >
     ) => {
       const response = await apiClient.post<{ data: Product }>(
