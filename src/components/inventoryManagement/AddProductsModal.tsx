@@ -1,9 +1,17 @@
 import React, { useState } from "react";
-import { Modal, Input, Select, Button, Upload, InputNumber } from "antd";
+import {
+  Modal,
+  Input,
+  Select,
+  Button,
+  Upload,
+  InputNumber,
+  message,
+} from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useCategories } from "../../hooks/useCategories";
 import { useVendors } from "../../hooks/useVendors";
-import { Product } from "../../hooks/useProducts";
+import { Product, useCreateProduct } from "../../hooks/useProducts";
 
 const { Option } = Select;
 
@@ -32,12 +40,90 @@ const AddProductsModal: React.FC<AddProductsModalProps> = ({
     image: null as File | null, // ✅ Fixes `SetStateAction` error
   });
 
+  // State for The Food or Drink Category
+  const [selectedCategoryType, setSelectedCategoryType] = useState<
+    "food" | "drinks" | ""
+  >("");
+
   // 🔥 Fetch categories & vendors
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
   const { data: vendors, isLoading: isLoadingVendors } = useVendors();
 
   const handleInputChange = (field: string, value: any) => {
     setProduct((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const uploadImageToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "inventory_management_cloud");
+
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/dfkqrijtg/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Image upload failed");
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  };
+
+  //Destructured Mutation into CreateProduct
+  const { mutate: createProduct } = useCreateProduct();
+
+  // Handler for when the Add Product button is clicked
+  const handleAddProduct = async () => {
+    try {
+      let imageUrl = "";
+
+      if (product.image) {
+        imageUrl = await uploadImageToCloudinary(product.image);
+      }
+      const newProduct = {
+        name: product.name,
+        category_id: Number(product.category_id),
+        location_id: product.location_id,
+        vendor_id: Number(product.vendor_id),
+        description: product.description,
+        qty: product.qty,
+        amount: product.amount.toString(),
+        discount: product.discount.toString(),
+        slug: product.name.toLowerCase().replace(/\s+/g, "-"),
+
+        images: [{ url: imageUrl }],
+      };
+
+      // Call the mutation with the new product
+      createProduct(newProduct, {
+        onSuccess: (data) => {
+          onAddProduct(data);
+          setProduct({
+            name: "",
+            category_id: "",
+            location_id: userLocationId,
+            vendor_id: "",
+            description: "",
+            qty: 0,
+            amount: 0,
+            discount: 0,
+            image: null,
+          });
+          setSelectedCategoryType("");
+          onCancel();
+        },
+        onError: (error: any) => {
+          message.error("Failed to create product. Please try again.");
+        },
+      });
+    } catch (error) {
+      message.error("Image upload failed. Please try again.");
+    }
   };
 
   return (
@@ -62,20 +148,41 @@ const AddProductsModal: React.FC<AddProductsModalProps> = ({
             />
           </div>
           <div className="w-1/2">
-            <label className="text-gray-700 text-sm">Category</label>
+            {/* Category Type Select */}
+            <label className="text-gray-700 text-sm">Category Type</label>
             <Select
-              placeholder="Select category"
-              value={product.category_id}
-              onChange={(value) => handleInputChange("category_id", value)}
+              placeholder="Select category type"
+              value={selectedCategoryType || undefined}
+              onChange={(value: "food" | "drinks") => {
+                setSelectedCategoryType(value);
+                handleInputChange("category_id", "");
+              }}
               className="w-full mt-1"
-              loading={isLoadingCategories}
             >
-              {categories?.map((cat) => (
-                <Option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </Option>
-              ))}
+              <Option value="food">Food</Option>
+              <Option value="drinks">Drinks</Option>
             </Select>
+            {/* Category Select appears after type is selected */}
+            {selectedCategoryType && (
+              <>
+                <label className="text-gray-700 text-sm mt-4">Category</label>
+                <Select
+                  placeholder="Select category"
+                  value={product.category_id || undefined}
+                  onChange={(value) => handleInputChange("category_id", value)}
+                  className="w-full mt-1"
+                  loading={isLoadingCategories}
+                >
+                  {categories &&
+                    categories[selectedCategoryType] &&
+                    categories[selectedCategoryType].map((cat) => (
+                      <Option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </Option>
+                    ))}
+                </Select>
+              </>
+            )}
           </div>
         </div>
 
@@ -178,7 +285,7 @@ const AddProductsModal: React.FC<AddProductsModalProps> = ({
             Cancel
           </Button>
           <Button
-            // onClick={onAddProduct}
+            onClick={handleAddProduct}
             className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primaryHover"
           >
             Add Product
