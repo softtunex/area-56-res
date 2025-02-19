@@ -35,7 +35,7 @@ const SecuritySection: React.FC = () => {
             <Button onClick={toggleChangePassword} className="px-4 py-2">
               Cancel
             </Button>
-            <Button type="primary" className="bg-red-500 px-4 py-2">
+            <Button type="primary" className="bg-primary px-4 py-2">
               Save
             </Button>
           </div>

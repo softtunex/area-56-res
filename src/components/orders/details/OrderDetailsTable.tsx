@@ -2,45 +2,54 @@ import React from "react";
 import { Table } from "antd";
 
 interface OrderDetailsTableProps {
-  data: {
-    key: number;
-    item: string;
-    quantity: string;
-    vendor: string;
-    total: string;
+  orderItems: {
+    id: number;
+    product: {
+      name: string;
+      vendor?: { name: string };
+    };
+    qty: number;
+    amount: string;
   }[];
 }
 
-const OrderDetailsTable: React.FC<OrderDetailsTableProps> = ({ data }) => {
+const OrderDetailsTable: React.FC<OrderDetailsTableProps> = ({
+  orderItems,
+}) => {
   const columns = [
     {
       title: "S/N",
-      dataIndex: "key",
-      key: "key",
-      render: (key: number) => <span>{key}</span>,
+      dataIndex: "id",
+      key: "id",
+      render: (_: any, __: any, index: number) => <span>{index + 1}</span>,
     },
     {
-      title: "Items",
-      dataIndex: "item",
-      key: "item",
+      title: "Item Name",
+      dataIndex: "product",
+      key: "product",
+      render: (product: { name: string }) => product?.name || "N/A",
     },
     {
       title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
+      dataIndex: "qty",
+      key: "qty",
+      render: (qty: number) => `x${qty}`,
     },
     {
       title: "Vendor",
-      dataIndex: "vendor",
+      dataIndex: "product",
       key: "vendor",
-      render: (vendor: string) => (
-        <span className="text-green-500 font-medium">{vendor}</span>
+      render: (product: { vendor?: { name: string } }) => (
+        <span className="text-green-500 font-medium">
+          {product?.vendor?.name || "Unknown Vendor"}
+        </span>
       ),
     },
     {
       title: "Total Amount",
-      dataIndex: "total",
-      key: "total",
+      dataIndex: "amount",
+      key: "amount",
+      render: (amount: string) => `₦${parseFloat(amount).toLocaleString()}`,
     },
   ];
 
@@ -49,7 +58,8 @@ const OrderDetailsTable: React.FC<OrderDetailsTableProps> = ({ data }) => {
       <h2 className="text-lg font-bold mb-4">Order Details</h2>
       <Table
         columns={columns}
-        dataSource={data}
+        dataSource={orderItems}
+        rowKey="id"
         pagination={false}
         bordered
         className="rounded-md"

@@ -3,49 +3,51 @@ import InventoryHeader from "../components/inventoryManagement/InventoryHeader";
 import EmptyState from "../components/inventoryManagement/EmptyState";
 import AddProductsModal from "../components/inventoryManagement/AddProductsModal";
 import InventoryTable from "../components/inventoryManagement/InventoryTable";
-import { productData } from "../data/productData";
-import { inventoryTableData } from "../data/inventoryTableData";
-
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  quantity: number;
-  selected: boolean;
-}
+import { Product, useProducts } from "../hooks/useProducts";
+import { Spin } from "antd";
 
 const InventoryManagementPage: React.FC = () => {
-  const [isEmpty, setIsEmpty] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [activeProducts, setActiveProducts] = useState(inventoryTableData);
+
+  // 🔥 Fetch products from API
+  const { data: productsData, isLoading } = useProducts(1);
 
   const handleUpdateList = () => {
     setModalVisible(true);
   };
 
-  const handleAddProducts = (products: Product[]) => {
-    const updatedProducts = products.map((product) => ({
-      ...product,
-      price: "₦60,000",
-      availability: true,
-    }));
-    setActiveProducts([...activeProducts, ...updatedProducts]);
-    setIsEmpty(false);
+  const handleModifyProduct = (product: Product) => {
+    console.log("Modify product:", product);
+    setModalVisible(true);
   };
+
+  const handleAddProduct = (newProduct: Product) => {
+    console.log("New Product Added:", newProduct);
+    setModalVisible(false); // ✅ Close modal after adding
+  };
+
+  // Dynamically set `userLocationId` based on logged-in user
+  const userLocationId = 1; // Replace with actual user location logic
 
   return (
     <div className="p-6 bg-white min-h-screen">
-      <InventoryHeader onAllProductsClick={() => setModalVisible(true)} />
-      {!isEmpty ? (
+      <InventoryHeader onAddProductClick={() => setModalVisible(true)} />
+
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <Spin size="large" />
+        </div>
+      ) : !productsData?.data ? (
         <EmptyState onUpdateListClick={handleUpdateList} />
       ) : (
-        <InventoryTable products={activeProducts} />
+        <InventoryTable onModifyProduct={handleModifyProduct} />
       )}
+
       <AddProductsModal
         visible={isModalVisible}
         onCancel={() => setModalVisible(false)}
-        onAddProducts={handleAddProducts}
-        products={productData}
+        onAddProduct={handleAddProduct} // ✅ Fixes the TS error
+        userLocationId={userLocationId} // ✅ Replace with actual logged-in user's location
       />
     </div>
   );

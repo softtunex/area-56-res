@@ -3,55 +3,59 @@ import RolesPageHeader from "../components/rolesAndPermissions/RolesPageHeader";
 import RoleHeader from "../components/rolesAndPermissions/RoleHeader";
 import PermissionGroup from "../components/rolesAndPermissions/PermissionGroup";
 import CreateRoleModal from "../components/rolesAndPermissions/CreateRoleModal";
-import { rolesData } from "../data/rolesData";
+import { useRoles } from "../hooks/useRoles";
 
 const RolesAndPermissionsPage: React.FC = () => {
+  const { data: roles } = useRoles();
   const [isModalVisible, setModalVisible] = useState(false);
-  const [roles, setRoles] = useState(rolesData);
+  const [editingRole, setEditingRole] = useState<{
+    id: number;
+    name: string;
+    description: string;
+  } | null>(null);
 
-  const handleAddRole = (roleName: string) => {
-    const newRole = {
-      name: roleName,
-      color: "blue", // Default color or you can customize
-      permissionGroups: [],
-    };
-    setRoles((prevRoles) => [...prevRoles, newRole]);
-    setModalVisible(false);
+  const handleEditRole = (role: {
+    id: number;
+    name: string;
+    description: string;
+  }) => {
+    setEditingRole(role);
+    setModalVisible(true);
   };
 
   return (
     <div className="p-6 bg-white min-h-screen">
       {/* Page Header */}
-      <RolesPageHeader
-        onCreateRole={() => setModalVisible(true)} // Pass the modal handler
-      />
+      <RolesPageHeader onCreateRole={() => setModalVisible(true)} />
 
       {/* Role Sections */}
-      {roles.map((role, idx) => (
+      {roles?.map((role) => (
         <div
-          key={idx}
+          key={role.id}
           className="mb-8 border border-gray-300 rounded-lg shadow-sm"
         >
-          {/* Role Header */}
-          <RoleHeader roleName={role.name} color={role.color} />
+          {/* Role Header with Edit & Delete */}
+          <RoleHeader
+            roleId={role.id}
+            roleName={role.name}
+            description={role.description}
+            color="blue"
+            onEdit={() => handleEditRole(role)}
+          />
 
-          {/* Permission Groups */}
-          {role.permissionGroups.map((group, idx) => (
-            <PermissionGroup
-              key={idx}
-              title={group.title}
-              description={group.description}
-              permissions={group.permissions}
-            />
-          ))}
+          {/* ✅ Pass `roleId` to PermissionGroup */}
+          <PermissionGroup roleId={role.id} />
         </div>
       ))}
 
-      {/* Create Role Modal */}
+      {/* Create & Edit Role Modal */}
       <CreateRoleModal
         visible={isModalVisible}
-        onCancel={() => setModalVisible(false)}
-        onSubmit={handleAddRole}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingRole(null);
+        }}
+        roleToEdit={editingRole}
       />
     </div>
   );

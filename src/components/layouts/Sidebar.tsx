@@ -1,82 +1,98 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { selectSidebarItems } from "../../redux/slices/sidebarSlice";
-import { LogoutOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import { useUserContext } from "../../context/UserContext";
+import {
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  QuestionCircleOutlined,
+} from "@ant-design/icons";
+import SidebarMenu from "./SidebarMenu";
+import { useLogout, useAuth } from "../../hooks/useAuth";
 
 const Sidebar: React.FC = () => {
-  const menuItems = useSelector(selectSidebarItems);
-  const { user, logout } = useUserContext();
+  const [isExpanded, setIsExpanded] = useState(true); // ✅ Controls sidebar expansion (desktop)
+  const [isMobileOpen, setIsMobileOpen] = useState(false); // ✅ Controls mobile sidebar visibility
+  const { mutate: logout } = useLogout();
+  const { data: user } = useAuth();
 
-  // Filter menu items based on the user's role
-  const getFilteredMenuItems = () => {
-    if (user.role === "waiter") {
-      return menuItems.filter((item) =>
-        [
-          "Dashboard",
-          "Orders",
-          "Staff Schedule",
-          "Stock Availability",
-        ].includes(item.label)
-      );
-    }
-
-    if (user.role === "superadmin") {
-      return menuItems.filter((item) => item.label !== "Stock Availability");
-    }
-
-    return menuItems; // Default case for other roles (e.g., vendor)
-  };
-
-  const filteredMenuItems = getFilteredMenuItems();
+  // ✅ Convert `user_type_id` to number & Default to `Super Admin`
+  const userRoleId = user?.user_type_id ? Number(user.user_type_id) : 1;
 
   return (
-    <div className="h-screen w-64 bg-white shadow-md flex flex-col">
-      {/* Sidebar Menu */}
-      <ul className="mt-4 flex-1">
-        {filteredMenuItems.map((item, index) => (
-          <li key={index} className="mb-2">
-            <NavLink
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center px-4 py-3 rounded-lg ${
-                  isActive
-                    ? "bg-red-500 text-white hover:bg-red-600"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <span className="mr-4 text-lg">
-                <item.icon />
-              </span>
-              <span className="text-sm">{item.label}</span>
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+    <>
+      {/* ✅ Sidebar Container */}
+      <aside
+        className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 z-30 
+    ${isMobileOpen ? "w-72 translate-x-0" : "-translate-x-full"}
+    md:translate-x-0 md:relative
+    ${isExpanded ? "md:w-72" : "md:w-20"}`} // ✅ Move width outside of template literals
+      >
+        {/* ✅ Sidebar Header with Toggle Buttons */}
+        <div className="p-4 flex justify-between items-center border-b">
+          {/* Toggle Button for Desktop */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-xl md:block hidden"
+          >
+            {isExpanded ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+          </button>
 
-      {/* Support & Logout */}
-      <div className="p-4 border-t">
-        {/* Support Link */}
-        <NavLink
-          to="/support"
-          className="block mb-2 text-gray-600 hover:text-red-600 flex items-center px-4 py-3 rounded-lg hover:bg-gray-100"
-        >
-          <QuestionCircleOutlined className="mr-2 text-lg" />
-          <span className="text-sm">Support</span>
-        </NavLink>
+          {/* Close Button for Mobile */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="md:hidden text-2xl mt-16"
+          >
+            ✖
+          </button>
+        </div>
 
-        {/* Logout Button */}
+        {/* ✅ Sidebar Menu */}
+        <SidebarMenu isExpanded={isExpanded} userRoleId={userRoleId} />
+
+        {/* ✅ Support & Logout Section */}
+        <div className="p-4 border-t flex flex-col gap-2">
+          {/* Support */}
+          <NavLink
+            to="/support"
+            className="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:text-primaryHover hover:bg-gray-100"
+          >
+            <QuestionCircleOutlined className="mr-2 text-lg" />
+            <span className={`text-sm ${isExpanded ? "block" : "hidden"}`}>
+              Support
+            </span>
+          </NavLink>
+
+          {/* Logout */}
+          <button
+            onClick={() => logout()}
+            className="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:text-primaryHover hover:bg-gray-100 w-full"
+          >
+            <LogoutOutlined className="mr-2 text-lg" />
+            <span className={`text-sm ${isExpanded ? "block" : "hidden"}`}>
+              Log Out
+            </span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ✅ Mobile Overlay (Closes Sidebar on Click) */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-50 z-20 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        ></div>
+      )}
+
+      {/* ✅ Hamburger Button for Small Screens */}
+      {!isMobileOpen && (
         <button
-          onClick={logout}
-          className="block text-gray-600 hover:text-red-600 flex items-center px-4 py-3 rounded-lg hover:bg-gray-100 w-full"
+          className="fixed top-4 left-2 z-40 p-2 bg-white shadow-lg rounded-lg md:hidden"
+          onClick={() => setIsMobileOpen(true)}
         >
-          <LogoutOutlined className="mr-2 text-lg" />
-          <span className="text-sm">Log Out</span>
+          <MenuUnfoldOutlined className="text-xl" />
         </button>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 

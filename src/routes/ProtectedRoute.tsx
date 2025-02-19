@@ -1,27 +1,28 @@
-import React, { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
-import { UserContext } from "../context/UserContext";
+import React from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 interface ProtectedRouteProps {
-  children: ReactNode; // Explicitly define children
-  requiredRoles?: string[]; // Optional array of roles
+  requiredRoles?: number[]; // ✅ Allow specifying required roles
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  requiredRoles,
-}) => {
-  const { user } = React.useContext(UserContext);
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles }) => {
+  const { data: user, isLoading } = useAuth();
+  const token = localStorage.getItem("token");
+  const location = useLocation();
 
-  //   if (!user.isAuthenticated) {
-  //     return <Navigate to="/login" />;
-  //   }
+  if (isLoading) return <p>Loading...</p>;
 
-  if (requiredRoles && !requiredRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" />;
+  if (!user || !token) {
+    return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  // ✅ Check if user has permission to access the route
+  if (requiredRoles && !requiredRoles.includes(Number(user.user_type_id))) {
+    return <Navigate to="/unauthorized" state={{ from: location }} replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

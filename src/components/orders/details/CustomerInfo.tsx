@@ -15,15 +15,21 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ customer }) => {
       <div className="space-y-2">
         <p>
           <span className="text-gray-500 block text-sm">Name</span>
-          <span className="text-black font-medium">{customer.name}</span>
+          <span className="text-black font-medium">
+            {customer.name || "N/A"}
+          </span>
         </p>
         <p>
           <span className="text-gray-500 block text-sm">Email</span>
-          <span className="text-black font-medium">{customer.email}</span>
+          <span className="text-black font-medium">
+            {customer.email || "N/A"}
+          </span>
         </p>
         <p>
           <span className="text-gray-500 block text-sm">Phone number</span>
-          <span className="text-black font-medium">{customer.phone}</span>
+          <span className="text-black font-medium">
+            {customer.phone || "N/A"}
+          </span>
         </p>
       </div>
     </div>

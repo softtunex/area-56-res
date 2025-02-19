@@ -13,7 +13,7 @@ const ProfilePage: React.FC = () => {
       {/* Header Section with Back Button */}
       <div className="flex items-center mb-6">
         <button
-          className="flex items-center text-gray-700 hover:text-red-500"
+          className="flex items-center text-gray-700 hover:text-primary"
           onClick={() => window.history.back()}
         >
           <LeftOutlined className="mr-2" />
@@ -36,7 +36,7 @@ const ProfilePage: React.FC = () => {
               <span
                 className={
                   activeTab === "profile"
-                    ? "text-red-500 font-semibold"
+                    ? "text-primary font-semibold"
                     : "text-gray-500"
                 }
               >
@@ -56,7 +56,7 @@ const ProfilePage: React.FC = () => {
               <span
                 className={
                   activeTab === "security"
-                    ? "text-red-500 font-semibold"
+                    ? "text-primary font-semibold"
                     : "text-gray-500"
                 }
               >

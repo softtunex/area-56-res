@@ -1,105 +1,94 @@
 import React, { useState } from "react";
-import ActiveOrders from "../components/orders/tables/ActiveOrders";
-import OrderDetails from "../components/orders/tables/OrderDetails";
-import {
-  AppstoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  HourglassOutlined,
-  ExclamationCircleOutlined,
-  FilterOutlined,
-} from "@ant-design/icons";
-import { Dropdown, Menu, Button } from "antd";
+import OrdersTable from "../components/orders/tables/OrdersTable";
+import OrderFilters from "../components/orders/OrderFilters";
+import OrderHeader from "../components/orders/OrderHeader";
+import { useOrderStatuses } from "../hooks/useOrders";
+import { Spin } from "antd";
+import { Icon } from "@iconify/react";
 
 const Orders: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("Active Orders");
+  const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [filters, setFilters] = useState<Record<string, any>>({}); // 🔥 Store active filters
+  const [showFilters, setShowFilters] = useState(false); // 🔥 Toggle Filters
+  const { data: orderStatuses, isLoading } = useOrderStatuses();
 
-  const tabs = [
-    {
-      label: "Active Orders (7)",
-      key: "Active Orders",
-      icon: <AppstoreOutlined />,
-    },
-    {
-      label: "Served (20)",
-      key: "Served",
-      icon: <CheckCircleOutlined />,
-    },
-    {
-      label: "Canceled (5)",
-      key: "Canceled",
-      icon: <CloseCircleOutlined />,
-    },
-    {
-      label: "Completed (20)",
-      key: "Completed",
-      icon: <HourglassOutlined />,
-    },
-    {
-      label: "Unconfirmed Payment (4)",
-      key: "Unconfirmed Payment",
-      icon: <ExclamationCircleOutlined />,
-    },
+  // 🔥 Define icon mapping for statuses (Iconify)
+  const statusIcons: Record<string, string> = {
+    Placed: "mdi:cart-arrow-down",
+    Confirm: "mdi:check-circle-outline",
+    Preparing: "mdi:chef-hat",
+    Completed: "mdi:clipboard-check-outline",
+    Served: "mdi:food-variant",
+  };
+
+  // 🔥 Manually order the statuses from "Placed" → "Served"
+  const orderedStatuses = [
+    "Placed",
+    "Confirm",
+    "Preparing",
+    "Completed",
+    "Served",
   ];
 
-  // Filter dropdown menu
-  const filterMenu = (
-    <Menu>
-      <Menu.Item key="1">Last 24 hours</Menu.Item>
-      <Menu.Item key="2">Last 7 days</Menu.Item>
-      <Menu.Item key="3">Last 30 days</Menu.Item>
-    </Menu>
-  );
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "Active Orders":
-        return <ActiveOrders />;
-      case "Served":
-        return <OrderDetails orderType="Served" />;
-      case "Canceled":
-        return <OrderDetails orderType="Canceled" />;
-      case "Completed":
-        return <OrderDetails orderType="Completed" />;
-      case "Unconfirmed Payment":
-        return <OrderDetails orderType="Unconfirmed Payment" />;
-      default:
-        return null;
-    }
-  };
+  // ✅ Filter and sort statuses dynamically
+  const sortedStatuses = orderStatuses
+    ?.slice()
+    .sort(
+      (a, b) =>
+        orderedStatuses.indexOf(a.name) - orderedStatuses.indexOf(b.name)
+    );
 
   return (
     <div className="p-6 bg-white min-h-screen">
-      {/* Tab Header */}
+      {/* ✅ Order Header Section */}
+      <OrderHeader
+        title="Orders Management"
+        onToggleFilters={() => setShowFilters(!showFilters)}
+      />
+      {/* ✅ Filters Section (Collapsible) */}
+      {showFilters && (
+        <OrderFilters
+          fields={[
+            { key: "reference", label: "Order ID", type: "text" },
+            { key: "user_id", label: "Customer ID", type: "number" },
+            // { key: "location", label: "Location", type: "text" },
+            { key: "dateRange", label: "Order Date", type: "date" },
+          ]}
+          onApplyFilters={(newFilters) =>
+            setFilters({ ...filters, ...newFilters })
+          }
+          onClearFilters={() => setFilters({})}
+        />
+      )}
+      {/* ✅ Tab Header */}
       <div className="flex justify-between items-center border-b pb-2 mb-4">
-        {/* Tabs */}
         <div className="flex space-x-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex flex-col items-center px-4 py-2 rounded-t-lg ${
-                activeTab === tab.key
-                  ? "text-red-500 border-b-4 border-red-500 font-semibold"
-                  : "text-gray-500 hover:text-red-500"
-              }`}
-            >
-              <div className="text-lg">{tab.icon}</div>
-              <span className="mt-1 text-sm">{tab.label}</span>
-            </button>
-          ))}
+          {isLoading ? (
+            <Spin size="large" />
+          ) : (
+            sortedStatuses?.map((status) => (
+              <button
+                key={status.id}
+                onClick={() => setActiveTab(status.id)}
+                className={`flex flex-col items-center px-4 py-2 rounded-t-lg ${
+                  activeTab === status.id
+                    ? "text-primary border-b-4 border-primary font-semibold"
+                    : "text-gray-500 hover:text-primary"
+                }`}
+              >
+                <Icon
+                  icon={statusIcons[status.name] || "mdi:cart"}
+                  className="text-xl"
+                />
+                <span className="mt-1 text-sm">{status.name}</span>
+              </button>
+            ))
+          )}
         </div>
-
-        {/* Filter Button */}
-        <Dropdown overlay={filterMenu} trigger={["click"]}>
-          <Button icon={<FilterOutlined />} className="text-gray-500">
-            Filters
-          </Button>
-        </Dropdown>
       </div>
-
-      {/* Tab Content */}
-      <div>{renderContent()}</div>
+      {/* ✅ Tab Content */}
+      <OrdersTable orderType={activeTab ?? 1} filters={filters} />{" "}
+      {/* 🔥 Passing filters */}
     </div>
   );
 };

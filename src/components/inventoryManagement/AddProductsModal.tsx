@@ -1,142 +1,188 @@
 import React, { useState } from "react";
-import { Modal, Input, Dropdown, Menu } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Modal, Input, Select, Button, Upload, InputNumber } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { useCategories } from "../../hooks/useCategories";
+import { useVendors } from "../../hooks/useVendors";
+import { Product } from "../../hooks/useProducts";
 
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  quantity: number;
-  selected: boolean;
-}
+const { Option } = Select;
 
 interface AddProductsModalProps {
   visible: boolean;
-  products: Product[];
   onCancel: () => void;
-  onAddProducts: (selectedProducts: Product[]) => void;
+  onAddProduct: (newProduct: Product) => void;
+  userLocationId: number; // ✅ Auto-set Location ID
 }
 
 const AddProductsModal: React.FC<AddProductsModalProps> = ({
   visible,
-  products,
   onCancel,
-  onAddProducts,
+  onAddProduct,
+  userLocationId,
 }) => {
-  const [productList, setProductList] = useState(products);
+  const [product, setProduct] = useState({
+    name: "",
+    category_id: "",
+    location_id: userLocationId, // ✅ Automatically set location ID
+    vendor_id: "",
+    description: "",
+    qty: 0,
+    amount: 0,
+    discount: 0,
+    image: null as File | null, // ✅ Fixes `SetStateAction` error
+  });
 
-  const handleToggleSelect = (id: number) => {
-    setProductList((prev) =>
-      prev.map((product) =>
-        product.id === id
-          ? { ...product, selected: !product.selected }
-          : product
-      )
-    );
+  // 🔥 Fetch categories & vendors
+  const { data: categories, isLoading: isLoadingCategories } = useCategories();
+  const { data: vendors, isLoading: isLoadingVendors } = useVendors();
+
+  const handleInputChange = (field: string, value: any) => {
+    setProduct((prev) => ({ ...prev, [field]: value }));
   };
-
-  const handleQuantityChange = (id: number, change: number) => {
-    setProductList((prev) =>
-      prev.map((product) =>
-        product.id === id
-          ? { ...product, quantity: Math.max(0, product.quantity + change) }
-          : product
-      )
-    );
-  };
-
-  const handleAddProducts = () => {
-    const selectedProducts = productList.filter((product) => product.selected);
-    onAddProducts(selectedProducts);
-  };
-
-  const sortMenu = (
-    <Menu>
-      <Menu.Item key="1">Recently Added</Menu.Item>
-      <Menu.Item key="2">Alphabetical</Menu.Item>
-      <Menu.Item key="3">Stock Quantity</Menu.Item>
-    </Menu>
-  );
 
   return (
     <Modal
-      title={<span className="font-bold text-lg">Add Products</span>}
+      title={<span className="font-bold text-lg">Add New Product</span>}
       visible={visible}
       footer={null}
       onCancel={onCancel}
       className="custom-modal"
-      width={900} // Increased width to align with design
+      width={450} // ✅ Matches design size
     >
-      <div className="flex justify-between items-center mb-4">
-        <Input
-          placeholder="Search"
-          prefix={<SearchOutlined />}
-          className="w-1/3 rounded-lg border border-gray-300"
-        />
-        <div className="flex items-center space-x-2">
-          <span className="font-medium">Sort By</span>
-          <Dropdown overlay={sortMenu}>
-            <button className="border border-gray-300 px-3 py-1 rounded-md hover:bg-gray-100">
-              Recently added
-            </button>
-          </Dropdown>
+      <div className="flex flex-col space-y-4">
+        {/* Product Name & Category */}
+        <div className="flex space-x-3">
+          <div className="w-1/2">
+            <label className="text-gray-700 text-sm">Product Name</label>
+            <Input
+              placeholder="Enter product name"
+              value={product.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              className="border rounded-md p-2 mt-1 placeholder-gray-400"
+            />
+          </div>
+          <div className="w-1/2">
+            <label className="text-gray-700 text-sm">Category</label>
+            <Select
+              placeholder="Select category"
+              value={product.category_id}
+              onChange={(value) => handleInputChange("category_id", value)}
+              className="w-full mt-1"
+              loading={isLoadingCategories}
+            >
+              {categories?.map((cat) => (
+                <Option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
         </div>
-      </div>
-      <div className="overflow-auto max-h-96 border border-gray-200 rounded-lg">
-        {productList.map((product) => (
-          <div
-            key={product.id}
-            className="flex items-center justify-between p-3  border-gray-300"
+
+        {/* Vendor Dropdown */}
+        <div>
+          <label className="text-gray-700 text-sm">Vendor</label>
+          <Select
+            placeholder="Select vendor"
+            value={product.vendor_id}
+            onChange={(value) => handleInputChange("vendor_id", value)}
+            className="w-full mt-1"
+            loading={isLoadingVendors}
           >
-            <div className="flex items-center space-x-4">
-              <input
-                type="checkbox"
-                checked={product.selected}
-                onChange={() => handleToggleSelect(product.id)}
-                className="w-6 h-6 text-red-500 border-gray-300 focus:ring-red-500 focus:ring-2 rounded"
+            {vendors?.map((vendor) => (
+              <Option key={vendor.id} value={vendor.id}>
+                {vendor.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        {/* Product Description */}
+        <div>
+          <label className="text-gray-700 text-sm">Product Description</label>
+          <Input.TextArea
+            placeholder="Enter product description"
+            value={product.description}
+            onChange={(e) => handleInputChange("description", e.target.value)}
+            rows={4} // ✅ Increased to match design
+            className="border rounded-md p-2 mt-1 placeholder-gray-400"
+          />
+        </div>
+
+        {/* Quantity & Price */}
+        <div className="flex space-x-3">
+          <div className="w-1/2">
+            <label className="text-gray-700 text-sm">Quantity</label>
+            <InputNumber
+              min={0}
+              value={product.qty}
+              onChange={(value) => handleInputChange("qty", value)}
+              className="w-full border rounded-md mt-1"
+            />
+          </div>
+          <div className="w-1/2">
+            <label className="text-gray-700 text-sm">Price per portion</label>
+            <div className="flex items-center border rounded-md p-2 mt-1">
+              <span className="text-gray-500 pr-2">₦</span>
+              <InputNumber
+                min={0}
+                value={product.amount}
+                onChange={(value) => handleInputChange("amount", value)}
+                className="border-none flex-1"
               />
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-12 h-12 rounded-md"
-              />
-              <span className="text-gray-700">{product.name}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleQuantityChange(product.id, -1)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 text-red-500 hover:bg-red-200"
-              >
-                -
-              </button>
-              <span className="text-gray-700">{product.quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(product.id, 1)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500 text-white hover:bg-red-600"
-              >
-                +
-              </button>
             </div>
           </div>
-        ))}
-      </div>
-      <div className="flex justify-between items-center mt-6">
-        <button className="text-red-500 hover:underline">
-          + Add New Product
-        </button>
-        <div className="flex space-x-2">
-          <button
+        </div>
+
+        {/* Discount */}
+        <div>
+          <label className="text-gray-700 text-sm">Discount (₦)</label>
+          <InputNumber
+            min={0}
+            value={product.discount}
+            onChange={(value) => handleInputChange("discount", value)}
+            className="w-full border rounded-md mt-1"
+          />
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <label className="text-gray-700 text-sm">Upload</label>
+          <Upload
+            showUploadList={false}
+            beforeUpload={(file) => {
+              handleInputChange("image", file);
+              return false;
+            }}
+            className="w-full mt-1"
+          >
+            <Button icon={<UploadOutlined />} className="w-full">
+              Upload Image
+            </Button>
+          </Upload>
+          {product.image && (
+            <img
+              src={URL.createObjectURL(product.image)}
+              alt="Product Preview"
+              className="w-20 h-20 mt-2 rounded-md border border-gray-300"
+            />
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-2 mt-4">
+          <Button
             onClick={onCancel}
-            className="border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-100"
+            className="border border-gray-300 px-6 py-2 rounded-lg"
           >
             Cancel
-          </button>
-          <button
-            onClick={handleAddProducts}
-            className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+          </Button>
+          <Button
+            // onClick={onAddProduct}
+            className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primaryHover"
           >
-            Add Products
-          </button>
+            Add Product
+          </Button>
         </div>
       </div>
     </Modal>
